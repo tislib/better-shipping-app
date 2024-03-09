@@ -8,7 +8,7 @@ import (
 )
 
 type CalculateShippingRequest struct {
-	UnitCount int `json:"unit_count"`
+	ItemCount int `json:"ItemCount"`
 }
 
 type CalculateShippingResponse struct {
@@ -32,7 +32,7 @@ func (p shippingApi) calculate(writer http.ResponseWriter, request *http.Request
 		return
 	}
 
-	shipping, err := p.service.CalculateShipping(requestBody.UnitCount)
+	shipping, err := p.service.CalculateShipping(requestBody.ItemCount)
 
 	if err != nil {
 		handleHttpError(writer, 400, err.Error())

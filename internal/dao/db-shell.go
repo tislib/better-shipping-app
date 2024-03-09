@@ -3,6 +3,7 @@ package dao
 import (
 	"better-shipping-app/internal/config"
 	"database/sql"
+	_ "github.com/lib/pq"
 )
 
 type DbShell interface {

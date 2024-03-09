@@ -2,6 +2,7 @@ package api
 
 import (
 	"better-shipping-app/internal/config"
+	"github.com/rs/cors"
 	"net/http"
 )
 
@@ -16,7 +17,15 @@ type server struct {
 }
 
 func (s *server) Start() error {
-	return http.ListenAndServe(s.config.ADDR, s.mux)
+	c := cors.New(cors.Options{
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
+		AllowCredentials: true,
+		AllowedOrigins:   []string{"*"},
+		AllowedHeaders:   []string{"*"},
+		MaxAge:           86400,
+	})
+
+	return http.ListenAndServe(s.config.ADDR, c.Handler(s.mux))
 }
 
 func (s *server) getMux() *http.ServeMux {
