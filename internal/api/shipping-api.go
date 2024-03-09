@@ -1,11 +1,23 @@
 package api
 
 import (
+	"better-shipping-app/internal/dto"
 	"better-shipping-app/internal/service"
+	"encoding/json"
 	"net/http"
 )
 
+type CalculateShippingRequest struct {
+	UnitCount int `json:"unit_count"`
+}
+
+type CalculateShippingResponse struct {
+	Shipping dto.Shipping `json:"shipping"`
+	Text     string       `json:"text"`
+}
+
 type shippingApi struct {
+	service service.ShippingService
 }
 
 func (p shippingApi) registerRoutes(s Server) {
@@ -13,12 +25,30 @@ func (p shippingApi) registerRoutes(s Server) {
 }
 
 func (p shippingApi) calculate(writer http.ResponseWriter, request *http.Request) {
-	writer.WriteHeader(200)
-	writer.Write([]byte("[]"))
+	var requestBody = CalculateShippingRequest{}
+
+	if err := json.NewDecoder(request.Body).Decode(&requestBody); err != nil {
+		handleHttpError(writer, 400, err.Error())
+		return
+	}
+
+	shipping, err := p.service.CalculateShipping(requestBody.UnitCount)
+
+	if err != nil {
+		handleHttpError(writer, 400, err.Error())
+		return
+	}
+
+	var responseBody = CalculateShippingResponse{
+		Shipping: shipping,
+		Text:     shipping.String(),
+	}
+
+	respondJsonBody(writer, responseBody)
 }
 
 func RegisterShippingApi(shippingService service.ShippingService, server Server) {
-	p := &shippingApi{}
+	p := &shippingApi{service: shippingService}
 
 	p.registerRoutes(server)
 }

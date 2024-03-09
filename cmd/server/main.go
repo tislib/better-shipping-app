@@ -5,22 +5,16 @@ import (
 	"better-shipping-app/internal/config"
 	"better-shipping-app/internal/dao"
 	"better-shipping-app/internal/service"
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
 	// set up the application
 
+	// init config
 	var cfg = config.LoadConfig()
 
-	var migrate = dao.NewMigrator(cfg.DatabaseConfig)
-
-	if err := migrate.Migrate(); err != nil {
-		log.Fatal(err)
-	}
-
 	// init dao layer
-
 	dbShell, err := dao.NewDbShell(cfg.DatabaseConfig)
 
 	if err != nil {
@@ -36,11 +30,11 @@ func main() {
 	// init api layer
 	server := api.NewServer(cfg.ServerConfig)
 
+	// register API Handlers
 	api.RegisterPackApi(packService, server)
 	api.RegisterShippingApi(shippingService, server)
 
 	// start the application
-
 	if err = server.Start(); err != nil {
 		log.Fatal(err)
 	}

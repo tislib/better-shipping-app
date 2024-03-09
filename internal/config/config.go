@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/joho/godotenv"
 	"github.com/sethvargo/go-envconfig"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 )
 
