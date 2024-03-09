@@ -10,15 +10,20 @@ import (
 
 type Config struct {
 	DatabaseConfig DatabaseConfig `env:", prefix=DB_"`
+	ServerConfig   ServerConfig   `env:", prefix=SERVER_"`
+}
+
+type ServerConfig struct {
+	ADDR string `env:"ADDR" default:":8080"`
 }
 
 type DatabaseConfig struct {
-	Host     string `env:"HOST"`
-	Port     int    `env:"PORT"`
-	Database string `env:"NAME"`
-	Schema   string `env:"SCHEMA"`
-	Username string `env:"USERNAME"`
-	Password string `env:"PASSWORD"`
+	Host     string `env:"HOST" default:"localhost"`
+	Port     int    `env:"PORT" default:"5432"`
+	Database string `env:"NAME" default:"root"`
+	Schema   string `env:"SCHEMA" default:"public"`
+	Username string `env:"USERNAME" default:"root"`
+	Password string `env:"PASSWORD" default:"root"`
 }
 
 func LoadConfig() Config {

@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	// setup the application
+	// set up the application
 
 	var cfg = config.LoadConfig()
 
@@ -34,7 +34,7 @@ func main() {
 	shippingService := service.NewShippingService(packService)
 
 	// init api layer
-	server := api.NewServer()
+	server := api.NewServer(cfg.ServerConfig)
 
 	api.RegisterPackApi(packService, server)
 	api.RegisterShippingApi(shippingService, server)
