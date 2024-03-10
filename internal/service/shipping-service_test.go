@@ -73,15 +73,45 @@ func TestShippingUnitsPacksVariant2(t *testing.T) {
 	checkShippingVariant(service, t, 2, "1x2")
 	checkShippingVariant(service, t, 3, "1x4")
 	checkShippingVariant(service, t, 4, "1x4")
-	checkShippingVariant(service, t, 11, "1x9 1x2")
-	checkShippingVariant(service, t, 17, "1x12 1x4 1x2")
+	checkShippingVariant(service, t, 11, "1x7 1x4")
+	checkShippingVariant(service, t, 17, "1x9 2x4")
 	checkShippingVariant(service, t, 21, "1x12 1x9")
-	checkShippingVariant(service, t, 27, "2x12 1x4")
-	checkShippingVariant(service, t, 29, "2x12 1x4 1x2")
+	checkShippingVariant(service, t, 27, "3x9")
+	checkShippingVariant(service, t, 29, "2x9 1x7 1x4")
 	checkShippingVariant(service, t, 31, "2x12 1x7")
-	checkShippingVariant(service, t, 37, "3x12 1x2")
-	checkShippingVariant(service, t, 39, "3x12 1x4")
-	checkShippingVariant(service, t, 37218738737182783, "3101561561431898x12 1x7")
+	checkShippingVariant(service, t, 37, "1x12 2x9 1x7")
+	checkShippingVariant(service, t, 39, "1x12 3x9")
+
+	mockPackService.AssertExpectations(t)
+}
+
+func TestShippingUnitsPacksVariant3(t *testing.T) {
+	mockPackService := &packServiceMock{}
+
+	mockPackService.On("ListPacks").Return([]model.Pack{
+		{ItemCount: 5},
+		{ItemCount: 12},
+	}, nil)
+
+	service := NewShippingService(mockPackService)
+
+	checkShippingVariant(service, t, 14, "3x5")
+
+	mockPackService.AssertExpectations(t)
+}
+
+func TestShippingUnitsPacksVariant4(t *testing.T) {
+	mockPackService := &packServiceMock{}
+
+	mockPackService.On("ListPacks").Return([]model.Pack{
+		{ItemCount: 23},
+		{ItemCount: 31},
+		{ItemCount: 53},
+	}, nil)
+
+	service := NewShippingService(mockPackService)
+
+	checkShippingVariant(service, t, 500000, "9429x53 7x31 2x23")
 
 	mockPackService.AssertExpectations(t)
 }

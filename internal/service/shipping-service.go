@@ -38,58 +38,67 @@ func (s shippingService) CalculateShipping(itemCount int) (dto.Shipping, error) 
 		return cmp.Compare(b.ItemCount, a.ItemCount)
 	})
 
-	// calculate refill count
-	// refill count is the number of items that need to be added to the order to make it suitable for packing. (like minimum amount of items to be added to the order to make it suitable for packing)
-	var refillCount = s.calculateRefillCount(itemCount, packs)
+	minPackSize := packs[len(packs)-1].ItemCount
 
-	// remainingItemCount is actual count after refill.
-	remainingItemCount := itemCount + refillCount
+	// identify top as the maximum possible item count,
+	// which can be the case if the itemCount is packed only with the smallest pack
+	top := (itemCount/minPackSize + 1) * minPackSize
+	// packMap is a map of pack size to pack
+	var packMap = make(map[int]model.Pack)
 
-	var shipping dto.Shipping
+	// dp is a slice of size top+1, which will be used to store the minimum number of packs required to pack the itemCount
+	dp := make([]int, top+1)
+
+	result := make([]int, top+1)
+
+	// initialize dp with top+1
+	for i := range dp {
+		dp[i] = top + 1
+	}
+
+	dp[0] = 0
+
+	// the purpose here is to find the minimum number of packs required to pack the itemCount, and store the result in dp
+	// it will continue to calculate even after itemCount reaches, until top.
 	for _, pack := range packs {
-		// calculate how many packs are needed
-		count := remainingItemCount / pack.ItemCount
+		var packSize = pack.ItemCount
+		packMap[packSize] = pack
 
-		if count > 0 {
-			shipping.Items = append(shipping.Items, dto.ShippingItem{
-				Pack:  pack,
-				Count: count,
-			})
+		for i := packSize; i <= top; i++ {
+			// if pack count is less than the current minimum pack count, update
+			if dp[i-packSize]+1 < dp[i] && dp[i-packSize] != top+1 {
+				dp[i] = dp[i-packSize] + 1
+				result[i] = packSize
+			}
 		}
+	}
 
-		// calculate remaining item count
-		remainingItemCount = remainingItemCount % pack.ItemCount
-
-		// if the remainingItemCount is 0, then we are done
-		if remainingItemCount == 0 {
+	// locate the nearest found itemCount
+	nearest := itemCount
+	for i := itemCount; i < top+1; i++ {
+		if dp[i] != top+1 {
+			nearest = i
 			break
 		}
+	}
+
+	packCountMap := make(map[int]int, len(packs))
+
+	for i := nearest; i > 0; i -= result[i] {
+		packCountMap[result[i]]++
+	}
+
+	shipping := dto.Shipping{}
+
+	for packSize, count := range packCountMap {
+		shipping.Items = append(shipping.Items, dto.ShippingItem{
+			Pack:  packMap[packSize],
+			Count: count,
+		})
+
 	}
 
 	return shipping, nil
-}
-
-// calculateRefillCount calculates the number of items that need to be added to the order to make it suitable for packing.
-func (s shippingService) calculateRefillCount(itemCount int, packs []model.Pack) int {
-	var remainingItemCount = itemCount
-
-	// decrease the remainingItemCount by the pack size as much as possible
-	for _, pack := range packs {
-		remainingItemCount = remainingItemCount % pack.ItemCount
-
-		if remainingItemCount == 0 {
-			break
-		}
-	}
-
-	// if the remainingItemCount is not 0, then we need
-	// to add the remainingItemCount to the order to make it suitable for packing
-	if remainingItemCount != 0 {
-		var smallestPack = packs[len(packs)-1]
-		return smallestPack.ItemCount - remainingItemCount
-	}
-
-	return 0
 }
 
 func NewShippingService(packService PackService) ShippingService {
